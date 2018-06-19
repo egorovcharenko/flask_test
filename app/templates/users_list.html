@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Welcome, {{ current_user.username }}</h1>
+<form action="" method="post">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.username.label }}<br>
+        {{ form.username(size=32) }}<br>
+        {% for error in form.username.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.password.label }}<br>
+        {{ form.password(size=32) }}<br>
+        {% for error in form.password.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.permissions.label }}<br>
+        {{ form.permissions(size=32) }}<br>
+        {% for error in form.permissions.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </p>
+    <p>
+    <p>{{ form.submit() }}</p>
+</form>
+
+<div id="userslist">Loading...</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    $(function () {
+        // $("#submit").click(function () {
+        //     reload_users();
+        // });
+        reload_users();
+    })
+
+    function reload_users() {
+
+        console.log('Starting AJAX request...')
+
+        $.getJSON('/users').done(response => {
+
+            var items = [];
+            $.each(response['users'], function (key, val) {
+                console.log(key, val)
+                items.push("<li id='" + key + "'> Username:" + val.username + ", Permissions: " + val.permissions
+                    + "<a href='#' onclick='$.ajax({url:`/user/" + val.id +
+                    "`, type: `DELETE`}).done( () => {reload_users();} )'>Delete user</a>   " +
+
+                    "" + "<a href='#' onclick='$.ajax({url:`/user/" + val.id +
+                    "`, type: `PATCH`, data: JSON.stringify({\"permissions\": \"1\"}), contentType: \"application/json\"}).done( () => {reload_users();} )'>Make admin</a>   " +
+                    "" + "<a href='#' onclick='$.ajax({url:`/user/" + val.id +
+                    "`, type: `PATCH`, data: JSON.stringify({\"permissions\": \"0\"}), contentType: \"application/json\"}).done( () => {reload_users();} )'>Make plain user</a>" +
+                    "</li>");
+            });
+
+            $("#userslist").html($("<ul/>", {
+                "class": "my-new-list",
+                html: items.join("")
+            }));
+
+            console.log('Finished request', response['users'], $("#userslist"))
+        }).fail(response => {
+            $("#userslist").text("Error: coulnd't load user list");
+        })
+    }
+</script>
+{% endblock %}
